@@ -84,7 +84,7 @@ public class ShiroConfig {
         CustomRealm customRealm = new CustomRealm();
 
         // 设置密码校验方式
-        customRealm.setCredentialsMatcher(hashedCredentialsMatcher());
+        //customRealm.setCredentialsMatcher(hashedCredentialsMatcher());
 
         return customRealm;
     }
