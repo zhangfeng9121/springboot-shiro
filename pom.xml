@@ -56,6 +56,15 @@
             <artifactId>druid</artifactId>
             <version>1.1.18</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.crazycake/shiro-redis -->
+        <dependency>
+            <groupId>org.crazycake</groupId>
+            <artifactId>shiro-redis</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>

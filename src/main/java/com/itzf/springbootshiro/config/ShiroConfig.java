@@ -5,9 +5,12 @@ import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.crazycake.shiro.RedisCacheManager;
+import org.crazycake.shiro.RedisManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.servlet.Filter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -35,6 +38,11 @@ public class ShiroConfig {
         //登录成功，跳转url，如果前后端分离，则没这个调用
         shiroFilterFactoryBean.setSuccessUrl("/");
 
+        // 自定义角色、权限过滤器
+        Map<String, Filter> filterMap = new LinkedHashMap<>();
+        filterMap.put("roleFilter", new CustomRolesAuthorizationFilter());
+        shiroFilterFactoryBean.setFilters(filterMap);
+
         //拦截器路径
         // 坑一，部分路径无法进行拦截，时有时无；因为同学使用的是hashmap, 无序的，应该改为LinkedHashMap
         Map<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
@@ -50,7 +58,8 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/authc", "authc");
 
         //管理员角色才可以访问
-        filterChainDefinitionMap.put("/admin/**","roles[admin]");
+//        filterChainDefinitionMap.put("/admin/**","roles[admin,root]");
+        filterChainDefinitionMap.put("/admin/**","roleFilter[admin,root]");
 
         //有编辑权限才可以访问
         filterChainDefinitionMap.put("/video/update","perms[video_update]");
@@ -72,6 +81,7 @@ public class ShiroConfig {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         securityManager.setRealm(customRealm());
         securityManager.setSessionManager(sessionManager());
+        securityManager.setCacheManager(redisCacheManager());
         return securityManager;
     }
 
@@ -113,5 +123,19 @@ public class ShiroConfig {
     public SessionManager sessionManager() {
         CustomSessionManager customSessionManager = new CustomSessionManager();
         return customSessionManager;
+    }
+
+    @Bean
+    public RedisManager redisManager() {
+        RedisManager redisManager = new RedisManager();
+        redisManager.setHost("localhost");
+        return redisManager;
+    }
+
+    @Bean
+    public RedisCacheManager redisCacheManager() {
+        RedisCacheManager redisCacheManager = new RedisCacheManager();
+        redisCacheManager.setRedisManager(redisManager());
+        return redisCacheManager;
     }
 }

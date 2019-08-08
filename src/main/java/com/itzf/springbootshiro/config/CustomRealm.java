@@ -30,9 +30,9 @@ public class CustomRealm extends AuthorizingRealm {
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        String username = (String) principals.getPrimaryPrincipal();
+        User newUser = (User) principals.getPrimaryPrincipal();
 
-        User user = userService.findUserInfoByUserName(username);
+        User user = userService.findUserInfoByUserName(newUser.getUsername());
         List<Role> roleList = user.getRoleList();
         List<String> roleNameList = new ArrayList<>();
         List<String> permNameList = new ArrayList<>();
@@ -71,7 +71,7 @@ public class CustomRealm extends AuthorizingRealm {
             return null;
         }
 
-        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(username, pwd, this.getClass().getName());
+        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(user, pwd, this.getClass().getName());
         return simpleAuthenticationInfo;
     }
 }
