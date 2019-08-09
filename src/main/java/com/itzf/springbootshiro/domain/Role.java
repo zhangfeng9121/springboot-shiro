@@ -1,12 +1,13 @@
 package com.itzf.springbootshiro.domain;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * @AUTHOR ZF
  * @DATE 2019/7/25
  */
-public class Role {
+public class Role implements Serializable {
     private Integer id;
     private String name;
     private String description;

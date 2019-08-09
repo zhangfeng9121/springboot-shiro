@@ -3,12 +3,17 @@ package com.itzf.springbootshiro.config;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.spring.LifecycleBeanPostProcessor;
+import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.crazycake.shiro.RedisCacheManager;
 import org.crazycake.shiro.RedisManager;
+import org.crazycake.shiro.RedisSessionDAO;
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 import javax.servlet.Filter;
 import java.util.LinkedHashMap;
@@ -94,7 +99,7 @@ public class ShiroConfig {
         CustomRealm customRealm = new CustomRealm();
 
         // 设置密码校验方式
-        //customRealm.setCredentialsMatcher(hashedCredentialsMatcher());
+        customRealm.setCredentialsMatcher(hashedCredentialsMatcher());
 
         return customRealm;
     }
@@ -111,6 +116,7 @@ public class ShiroConfig {
         hashedCredentialsMatcher.setHashAlgorithmName("md5");
         // 加密两次
         hashedCredentialsMatcher.setHashIterations(2);
+        //
 
         return hashedCredentialsMatcher;
     }
@@ -122,20 +128,82 @@ public class ShiroConfig {
     @Bean
     public SessionManager sessionManager() {
         CustomSessionManager customSessionManager = new CustomSessionManager();
+        customSessionManager.setSessionDAO(redisSessionDAO());
         return customSessionManager;
     }
 
+    /**
+     * 配置redisManager
+     * @return
+     */
     @Bean
     public RedisManager redisManager() {
         RedisManager redisManager = new RedisManager();
-        redisManager.setHost("localhost");
+        redisManager.setHost("localhost:6379");
+        // 密码验证
+        redisManager.setPassword("123456");
         return redisManager;
     }
 
+    /**
+     * 配置具体cache实现类
+     * @return
+     */
     @Bean
     public RedisCacheManager redisCacheManager() {
         RedisCacheManager redisCacheManager = new RedisCacheManager();
         redisCacheManager.setRedisManager(redisManager());
+
+        // 设置redis key的过期时间 单位：/s
+        // redisCacheManager.setExpire(20);
         return redisCacheManager;
+    }
+
+    /**
+     * 自定义session持久化
+     * @return
+     */
+    public RedisSessionDAO redisSessionDAO() {
+        RedisSessionDAO redisSessionDAO = new RedisSessionDAO();
+        redisSessionDAO.setRedisManager(redisManager());
+        // 设置redis key的过期时间 单位：/s
+        // redisSessionDAO.setExpire(30);
+
+        // 自定义sessionId
+        redisSessionDAO.setSessionIdGenerator(new CustomSessionIdGenerator());
+        return redisSessionDAO;
+    }
+
+    /**
+     * 管理shiro一些bean的生命周期 即bean初始化 与销毁
+     * @return
+     */
+    @Bean
+    public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
+        return new LifecycleBeanPostProcessor();
+    }
+
+    /**
+     * 加入注解的使用，不加入这个AOP注解不生效(shiro的注解 例如 @RequiresGuest)
+     * @return
+     */
+    @Bean
+    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor() {
+        AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
+        authorizationAttributeSourceAdvisor.setSecurityManager(securityManager());
+        return authorizationAttributeSourceAdvisor;
+    }
+
+    /**
+     * 用来扫描上下文寻找所有的Advistor(通知器), 将符合条件的Advisor应用到切入点的Bean中，
+     * 需要在LifecycleBeanPostProcessor创建后才可以创建
+     * @return
+     */
+    @Bean
+    @DependsOn("lifecycleBeanPostProcessor")
+    public DefaultAdvisorAutoProxyCreator getDefaultAdvisorAutoProxyCreator(){
+        DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator=new DefaultAdvisorAutoProxyCreator();
+        defaultAdvisorAutoProxyCreator.setUsePrefix(true);
+        return defaultAdvisorAutoProxyCreator;
     }
 }

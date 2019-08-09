@@ -12,6 +12,7 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.util.ByteSource;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -71,7 +72,11 @@ public class CustomRealm extends AuthorizingRealm {
             return null;
         }
 
-        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(user, pwd, this.getClass().getName());
+//        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(user, pwd, this.getClass().getName());
+
+
+        ByteSource bytes = ByteSource.Util.bytes("123456");
+        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(user, pwd, bytes, this.getClass().getName());
         return simpleAuthenticationInfo;
     }
 }

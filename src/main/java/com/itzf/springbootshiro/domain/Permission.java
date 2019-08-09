@@ -1,10 +1,12 @@
 package com.itzf.springbootshiro.domain;
 
+import java.io.Serializable;
+
 /**
  * @AUTHOR ZF
  * @DATE 2019/7/25
  */
-public class Permission {
+public class Permission implements Serializable {
     private Integer id;
     private String name;
     private String url;

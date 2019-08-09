@@ -1,5 +1,6 @@
 package com.itzf.springbootshiro.domain;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -7,7 +8,7 @@ import java.util.List;
  * @AUTHOR ZF
  * @DATE 2019/7/25
  */
-public class User {
+public class User implements Serializable {
     private Integer id;
     private String username;
     private String password;
